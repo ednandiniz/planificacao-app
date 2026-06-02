@@ -108,43 +108,47 @@ Peças: {melhor_final['total']}
 Perda: {melhor_final['perda_percentual']:.2f}%
 """)
 
-fig, ax = plt.subplots(figsize=(10, 5))
+    # =========================
+    # DESENHO (CORRIGIDO)
+    # =========================
 
-# principais
-for i in range(qtd_principal):
-    x = i * principal
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    # principais
+    for i in range(qtd_principal):
+        x = i * principal
+        ax.add_patch(plt.Rectangle(
+            (x, 0), principal, comprimento_bobina,
+            edgecolor='black', facecolor='skyblue'
+        ))
+
+    # sobra
     ax.add_patch(plt.Rectangle(
-        (x, 0), principal, comprimento_bobina,
-        edgecolor='black', facecolor='skyblue'
+        (largura_ocupada, 0), sobra, comprimento_bobina,
+        edgecolor='black', facecolor='lightgray'
     ))
 
-# área da sobra (cinza)
-ax.add_patch(plt.Rectangle(
-    (largura_ocupada, 0), sobra, comprimento_bobina,
-    edgecolor='black', facecolor='lightgray'
-))
+    # pontas
+    if melhor_final is not None:
+        total_comp = melhor_final["qy"] * melhor_final["comprimento"]
+        offset_y = (comprimento_bobina - total_comp) / 2
 
-# desenhar pontas (IMPORTANTE)
-if melhor_final:
-    total_comp = melhor_final["qy"] * melhor_final["comprimento"]
-    offset_y = (comprimento_bobina - total_comp) / 2
+        for i in range(melhor_final["qx"]):
+            for j in range(melhor_final["qy"]):
+                x = largura_ocupada + i * melhor_final["largura"]
+                y = offset_y + j * melhor_final["comprimento"]
 
-    for i in range(melhor_final["qx"]):
-        for j in range(melhor_final["qy"]):
-            x = largura_ocupada + i * melhor_final["largura"]
-            y = offset_y + j * melhor_final["comprimento"]
+                ax.add_patch(plt.Rectangle(
+                    (x, y),
+                    melhor_final["largura"],
+                    melhor_final["comprimento"],
+                    edgecolor='black',
+                    facecolor='orange'
+                ))
 
-            ax.add_patch(plt.Rectangle(
-                (x, y),
-                melhor_final["largura"],
-                melhor_final["comprimento"],
-                edgecolor='black',
-                facecolor='orange'
-            ))
+    ax.set_xlim(0, bobina)
+    ax.set_ylim(0, comprimento_bobina)
+    ax.set_title("Plano de Corte Completo")
+    ax.axis('off')
 
-ax.set_xlim(0, bobina)
-ax.set_ylim(0, comprimento_bobina)
-ax.set_title("Plano de Corte Completo")
-ax.axis('off')
-
-st.pyplot(fig)
+    st.pyplot(fig)
