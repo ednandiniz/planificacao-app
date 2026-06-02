@@ -108,7 +108,7 @@ Peças: {melhor_final['total']}
 Perda: {melhor_final['perda_percentual']:.2f}%
 """)
 
-   fig, ax = plt.subplots(figsize=(10, 5))
+fig, ax = plt.subplots(figsize=(10, 5))
 
 # principais
 for i in range(qtd_principal):
