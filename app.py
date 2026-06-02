@@ -8,11 +8,11 @@ st.set_page_config(page_title="Planificação", layout="centered")
 st.title("📊 Calculadora de Planificação")
 
 # Inputs
-comprimento_bobina = st.number_input("Comprimento da Folha (cm)", value=96.0)
-principal = st.number_input("Bobina Principal (cm)", value=54.0)
-bobina = st.number_input("Bobina Alternativa (cm)", value=79.0)
-gramatura_original = st.number_input("Gramatura Original (g/m²)", value=250.0)
-gramatura_alternativa = st.number_input("Gramatura Alternativa (g/m²)", value=250.0)
+principal = st.number_input("Largura da Bobina Original (cm)", value=54)
+comprimento_bobina = st.number_input("Comprimento da Folha (cm)", value=96)
+bobina = st.number_input("Largura da Bobina Alternativa (cm)", value=79)
+gramatura_original = st.number_input("Gramatura Original (g/m²)", value=250)
+gramatura_alternativa = st.number_input("Gramatura Alternativa (g/m²)", value=250)
 qtde_folhas = st.number_input("Quantidade de Folhas", value=3500)
 
 if st.button("CALCULAR"):
@@ -74,7 +74,24 @@ if st.button("CALCULAR"):
         r["perda"] = area_total - r["area_total_aproveitada"]
         r["perda_percentual"] = (r["perda"] / area_total) * 100
 
-    melhor_final = max(resultados, key=lambda x: x["total"])
+    op1, op2, op3 = resultados
+
+if op1["total"] == 0 and op2["total"] == 0:
+    melhor_base = None
+elif op1["perda_percentual"] <= op2["perda_percentual"]:
+    melhor_base = op1
+else:
+    melhor_base = op2
+
+if melhor_base is None:
+    melhor_final = op3 if op3["total"] > 0 else None
+else:
+    diferenca = melhor_base["perda_percentual"] - op3["perda_percentual"]
+
+    if op3["total"] > 0 and diferenca >= 5:
+        melhor_final = op3
+    else:
+        melhor_final = melhor_base
 
     st.subheader("✅ Resultado")
 
@@ -91,17 +108,43 @@ Peças: {melhor_final['total']}
 Perda: {melhor_final['perda_percentual']:.2f}%
 """)
 
-    # Desenho
-    fig, ax = plt.subplots()
+   fig, ax = plt.subplots(figsize=(10, 5))
 
-    for i in range(qtd_principal):
-        x = i * principal
-        ax.add_patch(plt.Rectangle((x, 0), principal, comprimento_bobina, edgecolor='black'))
+# principais
+for i in range(qtd_principal):
+    x = i * principal
+    ax.add_patch(plt.Rectangle(
+        (x, 0), principal, comprimento_bobina,
+        edgecolor='black', facecolor='skyblue'
+    ))
 
-    ax.add_patch(plt.Rectangle((largura_ocupada, 0), sobra, comprimento_bobina, color='gray'))
+# área da sobra (cinza)
+ax.add_patch(plt.Rectangle(
+    (largura_ocupada, 0), sobra, comprimento_bobina,
+    edgecolor='black', facecolor='lightgray'
+))
 
-    ax.set_xlim(0, bobina)
-    ax.set_ylim(0, comprimento_bobina)
-    ax.axis('off')
+# desenhar pontas (IMPORTANTE)
+if melhor_final:
+    total_comp = melhor_final["qy"] * melhor_final["comprimento"]
+    offset_y = (comprimento_bobina - total_comp) / 2
 
-    st.pyplot(fig)
+    for i in range(melhor_final["qx"]):
+        for j in range(melhor_final["qy"]):
+            x = largura_ocupada + i * melhor_final["largura"]
+            y = offset_y + j * melhor_final["comprimento"]
+
+            ax.add_patch(plt.Rectangle(
+                (x, y),
+                melhor_final["largura"],
+                melhor_final["comprimento"],
+                edgecolor='black',
+                facecolor='orange'
+            ))
+
+ax.set_xlim(0, bobina)
+ax.set_ylim(0, comprimento_bobina)
+ax.set_title("Plano de Corte Completo")
+ax.axis('off')
+
+st.pyplot(fig)
